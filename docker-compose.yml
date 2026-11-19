@@ -1,0 +1,170 @@
+services:
+  broker:
+    build:
+      context: ./python/
+    command: ["python", "broker.py"]
+    ports:
+      - "5555:5555"
+      - "5556:5556"
+
+  proxy:
+    build:
+      context: ./python/
+    command: ["python", "proxy.py"]
+    ports:
+      - "5557:5557"
+      - "5558:5558"
+  
+  referencia:
+    build:
+      context: ./python/
+    command: ["python", "referencia.py"]
+    ports:
+      - "5559:5559"
+
+  servidor_py1:
+    build:
+      context: ./python/
+    command: ["python", "servidor.py"]
+    environment:
+      nome_servidor: servidor_py1
+      dados: /dados/estado.json
+    volumes:
+      - dados_py1:/dados
+    depends_on:
+      - broker
+      - proxy
+      - referencia
+    
+  servidor_py2:
+    build:
+      context: ./python/
+    command: ["python", "servidor.py"]
+    environment:
+      nome_servidor: servidor_py2
+      dados: /dados/estado.json
+    volumes:
+      - dados_py2:/dados
+    depends_on:
+      - broker
+      - proxy
+      - referencia
+
+  bot_py1:
+    build:
+      context: ./python/
+    command: ["python", "cliente.py"]
+    environment:
+      nome_bot: bot_py1
+    depends_on:
+      - servidor_py1
+      - servidor_py2
+      - broker
+      - proxy
+  bot_py2:
+    build:
+      context: ./python/
+    command: ["python", "cliente.py"]
+    environment:
+      nome_bot: bot_py2
+    depends_on:
+      - servidor_py1
+      - servidor_py2
+      - broker
+      - proxy
+
+  servidor_cpp1:
+    build: ./cpp
+    command: ["./build/servidor"]
+    environment:
+      nome_servidor: servidor_cpp1
+      dados: /dados/estado.json
+    volumes:
+      - dados_cpp1:/dados
+    depends_on:
+      - broker
+      - proxy
+      - referencia
+
+  servidor_cpp2:
+    build: ./cpp
+    command: ["./build/servidor"]
+    environment:
+      nome_servidor: servidor_cpp2
+      dados: /dados/estado.json
+    volumes:
+      - dados_cpp2:/dados
+    depends_on:
+      - broker
+      - proxy
+      - referencia
+
+  bot_cpp1:
+    build: ./cpp
+    command: ["./build/cliente"]
+    environment:
+      nome_bot: bot_cpp1
+    depends_on:
+      - servidor_cpp1
+      - servidor_cpp2
+
+  bot_cpp2:
+    build: ./cpp
+    command: ["./build/cliente"]
+    environment:
+      nome_bot: bot_cpp2
+    depends_on:
+      - servidor_cpp1
+      - servidor_cpp2
+
+  servidor_java1:
+    build: ./java
+    command: ["java", "-cp", "app.jar", "Servidor"]
+    environment:
+      nome_servidor: servidor_java1
+      dados: /dados/estado.json
+    volumes:
+      - dados_java1:/dados
+    depends_on:
+      - broker
+      - proxy
+      - referencia
+
+  servidor_java2:
+    build: ./java
+    command: ["java", "-cp", "app.jar", "Servidor"]
+    environment:
+      nome_servidor: servidor_java2
+      dados: /dados/estado.json
+    volumes:
+      - dados_java2:/dados
+    depends_on:
+      - broker
+      - proxy
+      - referencia
+
+  bot_java1:
+    build: ./java
+    command: ["java", "-cp", "app.jar", "Cliente"]
+    environment:
+      nome_bot: bot_java1
+    depends_on:
+      - servidor_java1
+      - servidor_java2
+
+  bot_java2:
+    build: ./java
+    command: ["java", "-cp", "app.jar", "Cliente"]
+    environment:
+      nome_bot: bot_java2
+    depends_on:
+      - servidor_java1
+      - servidor_java2
+
+volumes:
+  dados_py1:
+  dados_py2:
+  dados_cpp1:
+  dados_cpp2:
+  dados_java1:
+  dados_java2:
